@@ -1,0 +1,23 @@
+import { CLIENT_ID } from '@env';
+
+// Set STATE parameter
+// See: https://developer.withings.com/developer-guide/v3/integration-guide/public-health-data-api/get-access/oauth-authorization-url
+const STATE = Date.now().toString();
+
+// Withings OAuth2 URLs
+export const BASE_URL = 'https://account.withings.com/oauth2_user/authorize2';
+// Set OAuth Scope
+// See: https://developer.withings.com/developer-guide/v3/integration-guide/public-health-data-api/get-access/oauth-authorization-url#scopes
+export const SCOPE = 'user.activity,user.metrics';
+
+export const REDIRECT_URI = 'idm://callback'; //Ensure this callback is set in Withings settings
+export const AUTHORIZATION_URL = `${BASE_URL}?client_id=${CLIENT_ID}&response_type=code&scope=${SCOPE}&redirect_uri=${REDIRECT_URI}&state=${STATE}`;
+export const TOKEN_BASE_URL = 'https://wbsapi.withings.net/v2/oauth2';
+export const TOKEN_URL = `${TOKEN_BASE_URL}?action=requesttoken`;
+export const REVOKE_URL = `${TOKEN_BASE_URL}/revoke`;
+
+// Token expiration
+// See: https://developer.withings.com/developer-guide/v3/integration-guide/dropship-cellular/get-access/access-and-refresh-tokens/
+export const ACCESS_TOKEN_EXPIRATION = 3 * 60 * 60 * 1000; // 3 hours
+export const REFRESH_TOKEN_EXPIRATION = 12 * 30 * 24 * 60 * 60 * 1000; // 1 year
+

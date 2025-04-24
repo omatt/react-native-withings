@@ -1,3 +1,46 @@
+# Withings API Setup
+
+## Configuring Private Keys
+To use the Withings API, `CLIENT_ID` and `CLIENT_SECRET` key needs to be obtained from the [Withings Developer Dashboard](https://developer.withings.com/dashboard/). Create an application on the Withings Developer Dashboard to fetch a key. Create an `.env` and store the keys as:
+
+```
+CLIENT_ID=YOUR_CLIENT_ID
+CLIENT_SECRET=YOUR_SECRET_KEY
+```
+
+## Callback URL
+Set up a Callback URL. Ensure that it matches the callback URL configured in the app to handle the redirect after Withings authentication.
+
+AndroidManifest.xml
+```no-script
+<activity
+    android:name=".MainActivity"
+    android:label="@string/app_name"
+    ...>
+    <intent-filter android:label="auth0">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="idm" android:host="callback" />
+    </intent-filter>
+</activity>   
+```
+
+Info.plist
+```no-script
+<key>CFBundleURLTypes</key>
+<array>
+<dict>
+<key>CFBundleURLSchemes</key>
+<array>
+<string>idm</string>
+</array>
+</dict>
+</array>
+```
+
+Withings API documentation can be found [here](https://developer.withings.com/api-reference/).
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
