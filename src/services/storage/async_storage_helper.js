@@ -54,6 +54,9 @@ export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId)
             }
         } else {
             console.log('✅ Access token is still valid');
+            console.log(`Current Time: ${new Date(currentTime).toISOString()} 
+            AccessToken Expiration: ${new Date(accessTokenExpTime).toISOString()}
+            RefreshToken Expiration: ${new Date(refreshTokenExpTime).toISOString()}`);
             setAccessToken(accessToken);
             setRefreshToken(refreshToken);
             setUserId(userId);
