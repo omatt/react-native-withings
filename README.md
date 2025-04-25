@@ -1,7 +1,12 @@
 # Withings API Setup
 
 ## Configuring Private Keys
-To use the Withings API, `CLIENT_ID` and `CLIENT_SECRET` key needs to be obtained from the [Withings Developer Dashboard](https://developer.withings.com/dashboard/). Create an application on the Withings Developer Dashboard to fetch a key. Create an `.env` and store the keys as:
+To use the Withings API, `CLIENT_ID` and `CLIENT_SECRET` key needs to be obtained from the [Withings Developer Dashboard](https://developer.withings.com/dashboard/). Create an application on the Withings Developer Dashboard to fetch a key. Here's how the Developer Dashboard looks like.
+
+<img width="1454" alt="Bildschirmfoto 2025-04-24 um 19 52 36" src="https://github.com/user-attachments/assets/61f48208-3bcd-4f76-841e-4a2f15a30471" />
+
+
+Create an `.env` and store the keys as:
 
 ```
 CLIENT_ID=YOUR_CLIENT_ID
