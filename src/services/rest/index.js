@@ -2,7 +2,6 @@ import { CLIENT_ID, CLIENT_SECRET } from '@env';
 import {useCallback, useEffect, useState} from 'react';
 import {Alert, Linking} from 'react-native';
 import {parseUrl} from 'query-string/base';
-import { useRef } from 'react';
 import {generateSignature, getNonce} from './token_manager';
 import {
     AUTHORIZATION_URL,
@@ -23,6 +22,7 @@ export const useWithingsAuth = () => {
     const [accessToken, setAccessToken] = useState(null);
     const [refreshToken, setRefreshToken] = useState(null);
     const [userId, setUserId] = useState(null);
+    const [hasHandledRedirect, setHasHandledRedirect] = useState(false); // Manage this in state
 
     const exchangeAuthCodeForToken = useCallback(async (authCode) => {
         try {
@@ -68,10 +68,8 @@ export const useWithingsAuth = () => {
         }
     }, []);
 
-    const hasHandledRedirect = useRef(false);
     const handleRedirect = useCallback((url) => {
-        if (hasHandledRedirect.current) {return;} // Prevent double call
-        hasHandledRedirect.current = true;
+        if (hasHandledRedirect) { return; }
 
         console.log('🔁 Redirected back to app with URL:', url);
         const parsed = parseUrl(url);
@@ -79,20 +77,21 @@ export const useWithingsAuth = () => {
 
         if (authCode) {
             console.log('✅ Auth Code:', authCode);
-            exchangeAuthCodeForToken(authCode);
+            exchangeAuthCodeForToken(authCode).then();
+            setHasHandledRedirect(true); // Mark the redirect as handled
         } else {
             console.warn('⚠️ No auth code found in redirect URL');
         }
-    }, [exchangeAuthCodeForToken]);
+    }, [hasHandledRedirect, exchangeAuthCodeForToken]);
 
     useEffect(() => {
         const handleDeepLink = (event) => {
             handleRedirect(event.url);
         };
 
-        Linking.addEventListener('url', handleDeepLink);
+        let event = Linking.addEventListener('url', handleDeepLink);
         return () => {
-            Linking.removeEventListener('url', handleDeepLink);
+            Linking.removeAllListeners(event);
         };
     }, [handleRedirect]);
     return {
