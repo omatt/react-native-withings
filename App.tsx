@@ -18,6 +18,7 @@ import {getNonce} from './src/services/rest/token_manager';
 import {checkAuthToken, clearAsyncStorage} from './src/services/storage/async_storage_helper';
 import {fetchSleepData, fetchSleepDataSummary} from './src/services/rest/sleep';
 import {fetchHeartRateData} from './src/services/rest/heart';
+import {fetchStethoList} from './src/services/rest/stetho';
 
 
 function App(): React.JSX.Element {
@@ -114,6 +115,20 @@ function App(): React.JSX.Element {
                           console.log('Fetching sleep data...');
                           fetchSleepDataSummary(accessToken).then();
                       } else {
+                          Alert.alert('Error', 'Empty Access Token');
+                      }
+                  }}
+              />
+          </View>
+          <View style={{ marginTop: 20 }}>
+              <Button
+                  title="Fetch Stetho List"
+                  onPress={() => {
+                      console.log('Fetch Stetho List');
+                      if (accessToken != null) {
+                          fetchStethoList(accessToken).then();
+                      } else {
+                          console.log('Fetch Stetho List failed accessToken is null');
                           Alert.alert('Error', 'Empty Access Token');
                       }
                   }}
