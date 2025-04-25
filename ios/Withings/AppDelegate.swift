@@ -10,6 +10,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
 
+  // Handle incoming deep link URLs
+  func application(
+    _ application: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+  ) -> Bool {
+    // If the URL matches your scheme (e.g., com.yourapp:/oauthredirect)
+    if url.scheme == "idm" {
+      // Forward the URL to React Native's Linking module
+      RCTLinkingManager.application(application, open: url, options: options)
+      return true
+    }
+    return false
+  }
+
   func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
