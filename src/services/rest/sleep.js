@@ -67,8 +67,8 @@ export const fetchSleepDataSummary = async (accessToken) => {
             },
             body: new URLSearchParams({
                 action: 'getsummary',
-                startdate: formatDate(startDate),
-                enddate: formatDate(endDate),
+                startdateymd: formatDate(startDate),
+                enddateymd: formatDate(endDate),
                 // Store timestamp for last update of data to fetch entries after this date, ideally startDate + endDate
                 // Set as startDate for testing
                 lastupdate: last48hours,
@@ -86,16 +86,18 @@ export const fetchSleepDataSummary = async (accessToken) => {
             data.body.series.forEach((entry, index) => {
                 console.log(`\n--- 💤 Sleep Entry ${index + 1} ---`);
                 console.log('Date:', new Date(entry.date).toDateString());
-                console.log('  - Sleep Score:', entry.data.sleep_score);
+                console.log('  - Total Time in Bed:', entry.data.total_timeinbed, 'seconds');
                 console.log('  - Total Sleep Time:', entry.data.total_sleep_time, 'seconds');
-                console.log('  - Sleep Efficiency:', entry.data.sleep_efficiency + '%');
-                console.log('  - Duration to Sleep:', entry.data.duration_to_sleep, 'seconds');
-                console.log('  - Duration to Wake:', entry.data.duration_to_wakeup, 'seconds');
-                console.log('  - Average Heart Rate:', entry.data.hr_average);
+                console.log('  - Deep Sleep Duration:', entry.data.deepsleepduration + 'seconds');
+                console.log('  - Light Sleep Duration:', entry.data.lightsleepduration + 'seconds');
+                console.log('  - Sleep Efficiency:', (entry.data.sleep_efficiency * 100 )+ '%');
+                console.log('  - Duration to Sleep:', entry.data.durationtosleep, 'seconds');
+                console.log('  - Duration to Wake:', entry.data.wakeupduration, 'seconds');
+                console.log('  - Average Heart Rate:', entry.hr_average);
                 console.log('  - Min Heart Rate:', entry.data.hr_min);
                 console.log('  - Max Heart Rate:', entry.data.hr_max);
-                console.log('  - Sleep Start:', new Date(entry.data.startdate * 1000).toISOString());
-                console.log('  - Sleep End:', new Date(entry.data.enddate * 1000).toISOString());
+                console.log('  - Sleep Start:', new Date(entry.startdate * 1000).toISOString());
+                console.log('  - Sleep End:', new Date(entry.enddate * 1000).toISOString());
             });
         } else {
             console.warn('⚠️ No sleep summary data available.');
