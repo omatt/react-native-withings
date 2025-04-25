@@ -12,9 +12,10 @@ export const SCOPE = 'user.activity,user.metrics';
 
 export const REDIRECT_URI = 'idm://callback'; //Ensure this callback is set in Withings settings
 export const AUTHORIZATION_URL = `${BASE_URL}?client_id=${CLIENT_ID}&response_type=code&scope=${SCOPE}&redirect_uri=${REDIRECT_URI}&state=${STATE}`;
-export const TOKEN_BASE_URL = 'https://wbsapi.withings.net/v2/oauth2';
-export const TOKEN_URL = `${TOKEN_BASE_URL}?action=requesttoken`;
-export const REVOKE_URL = `${TOKEN_BASE_URL}/revoke`;
+export const TOKEN_BASE_URL = 'https://wbsapi.withings.net/v2';
+export const TOKEN_OAUTH2_URL = `${TOKEN_BASE_URL}/oauth2`;
+export const TOKEN_URL = `${TOKEN_OAUTH2_URL}?action=requesttoken`;
+export const TOKEN_SLEEP_URL = `${TOKEN_BASE_URL}/sleep`;
 
 // Token expiration
 // See: https://developer.withings.com/developer-guide/v3/integration-guide/dropship-cellular/get-access/access-and-refresh-tokens/

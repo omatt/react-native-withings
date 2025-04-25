@@ -13,13 +13,15 @@ import {
     Text,
     View,
 } from 'react-native';
-import {fetchHeartRateData, requestDemoAccessToken, revokeAccess, useWithingsAuth} from './src/services/rest';
+import {requestTokenRefresh, revokeAccess, useWithingsAuth} from './src/services/rest';
 import {getNonce} from './src/services/rest/token_manager';
-import {checkTokenExpiration} from './src/services/storage/async_storage_helper';
+import {checkAuthToken, clearAsyncStorage} from './src/services/storage/async_storage_helper';
+import {fetchSleepData, fetchSleepDataSummary} from './src/services/rest/sleep';
+import {fetchHeartRateData} from './src/services/rest/heart';
 
 
 function App(): React.JSX.Element {
-    const { accessToken, refreshToken, userId, setAccessToken, setRefreshToken, setUserId, startOAuthFlow } = useWithingsAuth();
+    const { accessToken, refreshToken, userId, setAccessToken, setRefreshToken, setUserId } = useWithingsAuth();
 
     useEffect(() => {
         if (accessToken && refreshToken) {
@@ -36,7 +38,8 @@ function App(): React.JSX.Element {
           <View style={{ marginTop: 20 }}>
               <Button title="Authorize Withings" onPress={() => {
                   console.log('🟢 Authorize button clicked');
-                  startOAuthFlow();
+                  // startOAuthFlow();
+                  checkAuthToken(setAccessToken, setRefreshToken, setUserId).then();
               }}
               />
           </View>
@@ -49,18 +52,31 @@ function App(): React.JSX.Element {
                   }}
               />
           </View>
-          <View style={{ marginTop: 20 }}>
-              <Button title="Access Demo Account" onPress={() => {
-                  console.log('🟢 Access Demo button clicked');
-                  requestDemoAccessToken(setAccessToken, setRefreshToken, setUserId).then();
-              }} />
-          </View>
+          {/*<View style={{ marginTop: 20 }}>*/}
+          {/*    <Button title="Access Demo Account" onPress={() => {*/}
+          {/*        console.log('🟢 Access Demo button clicked');*/}
+          {/*        requestDemoAccessToken(setAccessToken, setRefreshToken, setUserId).then();*/}
+          {/*    }} />*/}
+          {/*</View>*/}
+          {/*<View style={{ marginTop: 20 }}>*/}
+          {/*    <Button*/}
+          {/*        title="Check Stored Tokens"*/}
+          {/*        onPress={() => {*/}
+          {/*            console.log('Check Stored Tokens');*/}
+          {/*            checkTokenExpiration(setAccessToken, setRefreshToken, setUserId).then();*/}
+          {/*        }}*/}
+          {/*    />*/}
+          {/*</View>*/}
           <View style={{ marginTop: 20 }}>
               <Button
-                  title="Check Stored Tokens"
+                  title="Force Token Refresh"
                   onPress={() => {
-                      console.log('Check Stored Tokens');
-                      checkTokenExpiration(setAccessToken, setRefreshToken, setUserId);
+                      if(refreshToken != null) {
+                          console.log('Requesting Token Refresh');
+                          requestTokenRefresh(setAccessToken, setRefreshToken, setUserId, refreshToken).then();
+                      } else {
+                          Alert.alert('Error', 'Empty Refresh Token');
+                      }
                   }}
               />
           </View>
@@ -79,15 +95,50 @@ function App(): React.JSX.Element {
           </View>
           <View style={{ marginTop: 20 }}>
               <Button
+                  title="Fetch Sleep Data"
+                  onPress={() => {
+                      if(accessToken != null) {
+                          console.log('Fetching sleep data...');
+                          fetchSleepData(accessToken).then();
+                      } else {
+                          Alert.alert('Error', 'Empty Access Token');
+                      }
+                  }}
+              />
+          </View>
+          <View style={{ marginTop: 20 }}>
+              <Button
+                  title="Fetch Sleep Data Summary"
+                  onPress={() => {
+                      if(accessToken != null) {
+                          console.log('Fetching sleep data...');
+                          fetchSleepDataSummary(accessToken).then();
+                      } else {
+                          Alert.alert('Error', 'Empty Access Token');
+                      }
+                  }}
+              />
+          </View>
+          <View style={{ marginTop: 20 }}>
+              <Button
                   title="Revoke Access"
                   onPress={() => {
                       console.log('Revoke Access');
                       if (userId != null) {
-                        revokeAccess(userId).then();
+                        revokeAccess(setAccessToken, setRefreshToken, setUserId, userId).then();
                       } else {
                         console.log('Revoke Access failed: userId is null');
                         Alert.alert('Error', 'UserId is null');
                       }
+                  }}
+              />
+          </View>
+          <View style={{ marginTop: 20 }}>
+              <Button
+                  title="DEBUG: Clear AsyncStorage"
+                  onPress={() => {
+                      console.log('Clear stored Tokens');
+                      clearAsyncStorage().then();
                   }}
               />
           </View>

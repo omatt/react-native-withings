@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION} from '../rest/config';
-import {Alert} from 'react-native';
+import {requestTokenRefresh, startOAuthFlow} from '../rest';
 
 // Define constants for token keys in AsyncStorage
 export const KEY_ACCESS_TOKEN = 'accessToken';
@@ -19,7 +19,7 @@ export const storeUserTokens = async (accessToken, refreshToken, userId) => {
 };
 
 // Function to check token expiration and refresh if necessary
-export const checkTokenExpiration = async (setAccessToken, setRefreshToken, setUserId) => {
+export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId) => {
     try {
         // Retrieve tokens and expiration times from AsyncStorage
         const accessToken = await AsyncStorage.getItem(KEY_ACCESS_TOKEN);
@@ -30,7 +30,8 @@ export const checkTokenExpiration = async (setAccessToken, setRefreshToken, setU
 
         if (!accessToken || !refreshToken || !accessTokenExpiration || !refreshTokenExpiration) {
             console.log('⚠️ Tokens or expiration times not found in AsyncStorage');
-            Alert.alert('Error','⚠️ Tokens or expiration times not found in AsyncStorage');
+            // Alert.alert('Error','⚠️ Tokens or expiration times not found in AsyncStorage');
+            startOAuthFlow();  // Call the hook to initiate OAuth flow
             return;
         }
 
@@ -46,10 +47,10 @@ export const checkTokenExpiration = async (setAccessToken, setRefreshToken, setU
             // If refresh token is also expired, initiate OAuth flow
             if (currentTime > refreshTokenExpTime) {
                 console.log('❌ Both tokens are expired. Proceeding with OAuth flow...');
-                // useWithingsAuth();  // Call the hook to initiate OAuth flow
+                startOAuthFlow();  // Call the hook to initiate OAuth flow
             } else {
                 console.log('🔄 Access token expired, but refresh token is still valid. Refreshing access token...');
-                // requestTokenRefresh(setAccessToken, setRefreshToken, setUserId, refreshToken);  // Refresh the access token
+                requestTokenRefresh(setAccessToken, setRefreshToken, setUserId, refreshToken).then();  // Refresh the access token
             }
         } else {
             console.log('✅ Access token is still valid');

@@ -6,14 +6,19 @@ import { useRef } from 'react';
 import {generateSignature, getNonce} from './token_manager';
 import {
     AUTHORIZATION_URL,
-    REDIRECT_URI,REVOKE_URL, SCOPE,
-    TOKEN_BASE_URL,
+    REDIRECT_URI, SCOPE,
+    TOKEN_OAUTH2_URL,
     TOKEN_URL,
 } from './config';
 import {
     clearAsyncStorage, storeUserTokens,
 } from '../storage/async_storage_helper';
 
+// Start auth process
+// Check for existing accessToken and refreshToken and check for token validity
+// Start OAuthFlow if there's no existing tokens and use the returned authCode to
+// generate an accessToken and refreshToken. Store the generated tokens.
+// See: https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-authorize
 export const useWithingsAuth = () => {
     const [accessToken, setAccessToken] = useState(null);
     const [refreshToken, setRefreshToken] = useState(null);
@@ -90,12 +95,6 @@ export const useWithingsAuth = () => {
             Linking.removeEventListener('url', handleDeepLink);
         };
     }, [handleRedirect]);
-
-    const startOAuthFlow = () => {
-        console.log('🚀 Starting OAuth flow');
-        Linking.openURL(AUTHORIZATION_URL).then();
-    };
-
     return {
         accessToken,
         refreshToken,
@@ -107,10 +106,19 @@ export const useWithingsAuth = () => {
     };
 };
 
+export const startOAuthFlow = () => {
+    console.log('🚀 Starting OAuth flow');
+    Linking.openURL(AUTHORIZATION_URL).then();
+};
+
+// Request new tokens using stored refreshToken
+// Generate new accessToken and refreshToken
+// Store newly generated tokens
+// See: https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-getaccesstoken
 export const requestTokenRefresh = async (setAccessToken, setRefreshToken, setUserId, refreshToken) => {
     const action = 'requesttoken';
     const grantType = 'refresh_token';
-    const response = await fetch(TOKEN_BASE_URL, {
+    const response = await fetch(TOKEN_OAUTH2_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -143,15 +151,17 @@ export const requestTokenRefresh = async (setAccessToken, setRefreshToken, setUs
         await storeUserTokens(accessToken, refreshToken, userId.toString());
     } else {
         // If the response was unsuccessful, log an error
-        console.error('⚠️ Error: Failed to get demo access token');
+        console.error('⚠️ Error: Failed to refresh tokens');
     }
 };
 
+// Request access to demo account
+// See: https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-getdemoaccess
 export const requestDemoAccessToken = async (setAccessToken, setRefreshToken, setUserId) => {
     const action = 'getdemoaccess';
     const nonce = await getNonce();
     const signature = generateSignature(action, CLIENT_ID, nonce);
-    const response = await fetch(TOKEN_BASE_URL, {
+    const response = await fetch(TOKEN_OAUTH2_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -188,13 +198,15 @@ export const requestDemoAccessToken = async (setAccessToken, setRefreshToken, se
     }
 };
 
-export const revokeAccess = async (userId) => {
+// Revoke user access and clear stored tokens
+// See: https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-revoke
+export const revokeAccess = async (setAccessToken, setRefreshToken, setUserId, userId) => {
     const action = 'revoke';
     const nonce = await getNonce();
-    const signature = generateSignature(action, CLIENT_ID, nonce);
+    const signature = await generateSignature(action, CLIENT_ID, nonce);
     try {
         // Prepare the body for the revoke request
-        const response = await fetch(REVOKE_URL, {
+        const response = await fetch(TOKEN_OAUTH2_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -202,7 +214,7 @@ export const revokeAccess = async (userId) => {
             body: new URLSearchParams({
                 action: action,
                 client_id: CLIENT_ID,
-                signature: generateSignature(action, CLIENT_ID, signature),
+                signature: signature,
                 nonce: nonce,
                 userid: userId,
             }).toString(),
@@ -218,6 +230,10 @@ export const revokeAccess = async (userId) => {
             // Optionally, remove the stored token from AsyncStorage if you no longer need it
             await clearAsyncStorage();
 
+            setAccessToken('');
+            setRefreshToken('');
+            setUserId('');
+
             console.log('Access revoked successfully.');
         } else {
             Alert.alert('Error', 'Failed to revoke access: ' + (data.error || 'Unknown error.'));
@@ -225,51 +241,5 @@ export const revokeAccess = async (userId) => {
     } catch (error) {
         console.error('Error revoking access:', error);
         Alert.alert('Error', 'An error occurred while trying to revoke access.');
-    }
-};
-
-// Reference: https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-list
-export const fetchHeartRateData = async (accessToken) => {
-    try {
-        const endDate = Math.floor(Date.now() / 1000); // now
-        // const startDate = endDate - 24 * 60 * 60;       // 24 hours ago
-        const startDate = endDate - 7 * 24 * 60 * 60;   // last 7 days
-        console.log('Start Date:', new Date(startDate * 1000).toISOString());
-        console.log('End Date:', new Date(endDate * 1000).toISOString());
-        const response = await fetch('https://wbsapi.withings.net/v2/heart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                // 'Authorization': `Bearer ${accessToken}`,
-            },
-            body: new URLSearchParams({
-                action: 'list',
-                startdate: startDate.toString(),
-                enddate: endDate.toString(),
-                access_token: accessToken,
-                offset: 0,
-            }).toString(),
-        });
-
-        const data = await response.json();
-        console.log('Heart Rate Request access token:', accessToken);
-        console.log('Heart Rate Response:', data);
-
-        if (data.status === 0 && data.body && data.body.series) {
-            const heartRates = data.body.series.map(entry => ({
-                timestamp: entry.timestamp,
-                bpm: entry.heart_rate,
-            }));
-            console.log('❤️ Heart Rate Series:', heartRates);
-            console.log('Heart Rate more:', data.body.more);
-            console.log('Heart Rate offset:', data.body.offset);
-            return heartRates;
-        } else {
-            console.warn('⚠️ Failed to fetch heart rate data:', data);
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ Error fetching heart rate data:', error);
-        return null;
     }
 };

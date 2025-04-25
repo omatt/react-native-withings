@@ -1,8 +1,6 @@
 import HmacSHA256 from 'crypto-js/hmac-sha256';
 import {enc} from 'crypto-js';
 import { CLIENT_ID, CLIENT_SECRET } from '@env';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 export const generateSignature = (action, clientId, value) => {
     try {
