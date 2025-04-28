@@ -125,7 +125,7 @@ export const requestTokenRefresh = async (setAccessToken, setRefreshToken, setUs
         body: new URLSearchParams({
             action: action,
             client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET, // Signature hash protocol requires nonce
+            client_secret: CLIENT_SECRET,
             grant_type: grantType,
             refresh_token: refreshToken,
         }).toString(),
