@@ -44,7 +44,284 @@ Info.plist
 </array>
 ```
 
+## Implemented Withings API
+
 Withings API documentation can be found [here](https://developer.withings.com/api-reference/).
+
+### OAuth2
+
+The Withings API uses OAuth 2.0, an industry-standard protocol for authorization.
+OAuth 2.0 enables the application to access user-specific data with a secure and seamless way without requiring users to share their Withings credentials with the app.
+
+The Withings API supports the Authorization Code Flow, which is suitable for server-side applications. In this flow, the app will obtain an authorization code from the user, which can then be exchanged for an access token and refresh token.
+
+### Fetch authCode through Web Auth Flow
+
+To use the [Web Authorization Flow](https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-authorize), an authorization URL needs to be constructed with the appropriate query parameters. Here's an example of an authorization URL:
+
+```no-lang
+https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=YOUR_CLIENT_ID&scope=user.info,user.metrics,user.activity&redirect_uri=YOUR_REDIRECT_URI&state=YOUR_STATE
+```
+
+/src/services/rest/index.js
+
+```javascript
+export const startOAuthFlow = () => {
+    console.log('🚀 Starting OAuth flow');
+    Linking.openURL(AUTHORIZATION_URL).then();
+};
+```
+
+### [Request Token - with AuthCode](https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-getaccesstoken)
+
+After receiving the app callback with the authorization code, `exchangeAuthCodeForToken()` will process the request for auth tokens, and it will return an ACCESS_TOKEN and REFRESH_TOKEN.
+
+/src/services/rest/index.js
+
+```javascript
+const exchangeAuthCodeForToken = useCallback(async (authCode) => {
+    // ...
+}, []);
+```
+
+The tokens will then be stored in AsyncStorage.
+
+```javascript
+// Save to AsyncStorage
+await storeUserTokens(accessToken, refreshToken, userId.toString());
+```
+
+### [Token Refresh - Request Token with RefreshToken](https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-getaccesstoken)
+
+ACCESS_TOKEN is only valid for three (3) hours while REFRESH_TOKEN is valid for one (1) year. Requesting for a token refresh will generate a new ACCESS_TOKEN and REFRESH_TOKEN, the used REFRESH_TOKEN on this token refresh request will no longer be valid.
+
+/src/services/rest/index.js
+
+```javascript
+export const requestTokenRefresh = async (refreshToken) => {
+    const action = 'requesttoken';
+    const grantType = 'refresh_token';
+    const response = await fetch(TOKEN_OAUTH2_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            client_id: CLIENT_ID,
+            client_secret: CLIENT_SECRET,
+            grant_type: grantType,
+            refresh_token: refreshToken,
+        }).toString(),
+    });
+};
+```
+
+### [Revoke User Access](https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-revoke)
+
+This service allows to revoke the access your application have been granted to a user's data. After calling this webservice, your access and refresh tokens for this user will become invalid.
+
+/src/services/rest/index.js
+
+```javascript
+export const revokeAccess = async (userId) => {
+    const action = 'revoke';
+    const nonce = await getNonce();
+    const signature = await generateSignature(action, CLIENT_ID, nonce);
+    const response = await fetch(TOKEN_OAUTH2_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            client_id: CLIENT_ID,
+            signature: signature,
+            nonce: nonce,
+            userid: userId,
+        }).toString(),
+    });
+};
+```
+
+Clear stored tokens after revoking user access.
+
+```javascript
+await clearAsyncStorage();
+```
+
+### [Get Demo account access](https://developer.withings.com/api-reference/#tag/oauth2/operation/oauth2-getdemoaccess)
+
+This service grants access to a demo account containing mock data.
+
+/src/services/rest/index.js
+
+```javascript
+export const requestDemoAccessToken = async (setUserId) => {
+    const action = 'getdemoaccess';
+    const nonce = await getNonce();
+    const signature = generateSignature(action, CLIENT_ID, nonce);
+    const response = await fetch(TOKEN_OAUTH2_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            client_id: CLIENT_ID,
+            signature: signature,
+            nonce: nonce,
+            scope_oauth2: SCOPE,
+        }).toString(),
+    });
+};
+```
+
+### [Heart v2 Get](https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-get)
+
+**NOTE: it's undocumented on how a SIGNAL_TOKEN can be produced or retrieved.**
+
+Fetches high frequency ECG recording using SIGNAL_ID as identifier. 
+
+/src/services/rest/heart.js
+
+```javascript
+export const fetchHeartData = async (signalId, accessToken) => {
+    const action = 'get';
+    const nonce = await getNonce();
+    const signature = await generateSignature(action, CLIENT_ID, nonce);
+    const response = await fetch(TOKEN_HEART_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            signalid: signalId,
+            client_id: CLIENT_ID,
+            signature: signature,
+            nonce: nonce,
+            signal_token: 'TODO', // TODO:  how to fetch signal_token is undocumented
+        }).toString(),
+    });
+};
+```
+
+### [Heart v2 List](https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-list)
+
+**NOTE: using Withings ScanWatch Light as test device, it returns an empty List.**
+
+Returns a list of ECG records.
+
+/src/services/rest/heart.js
+
+```javascript
+export const fetchHeartList = async (accessToken) => {
+    const action = 'list';
+    const response = await fetch(TOKEN_HEART_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            startdate: START_DATE.toString(),
+            enddate: END_DATE.toString(),
+            access_token: accessToken,
+            offset: 0, // TODO: Add pagination
+        }).toString(),
+    });    
+};
+```
+
+### [Sleep v2 Get](https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-get)
+
+Returns sleep data captured at high frequency, including sleep stages.
+
+/src/services/rest/sleep.js
+
+```javascript
+export const fetchSleepData = async (accessToken) => {
+    const action = 'get';
+    const response = await fetch(TOKEN_SLEEP_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            startdate: START_DATE.toString(),
+            enddate: END_DATE.toString(),
+            access_token: accessToken,
+            // See data_fields reference: https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-get
+            data_fields: 'hr,rr,withings_index',
+        }).toString(),
+    });    
+};
+```
+
+Sleep stages can be interpreted with this function.
+
+```javascript
+export const getSleepStateName = (state) => {
+    const states = {
+        0: 'Unknown',
+        1: 'Awake',
+        2: 'Light Sleep',
+        3: 'Deep Sleep',
+        4: 'REM',
+    };
+    return states[state] || 'Unrecognized';
+};
+```
+
+### Sleep v2 Get Summary
+
+Returns sleep activity summaries, which are an aggregation of all the data captured at high frequency during the sleep activity.
+
+/src/services/rest/sleep.js
+
+```javascript
+export const fetchSleepDataSummary = async (accessToken) => {
+    const action = 'getsummary';
+    const response = await fetch(TOKEN_SLEEP_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            startdateymd: formatDateYYYYMMDD(START_DATE),
+            enddateymd: formatDateYYYYMMDD(END_DATE),
+            lastupdate: START_DATE,
+            access_token: accessToken,
+        }).toString(),
+    });    
+};
+```
+
+### [Stetho v2 List](https://developer.withings.com/api-reference/#tag/stetho/operation/stethov2-list)
+
+This service should return stetho signalIds which can be later fetched individually using [Stetho v2 Get API](https://developer.withings.com/api-reference/#tag/stetho/operation/stethov2-get).
+
+```javascript
+export const fetchStethoList = async (accessToken) => {
+    const action = 'list';
+    const response = await fetch(TOKEN_STETHO_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: action,
+            startdate: START_DATE.toString(),
+            enddate: END_DATE.toString(),
+            access_token: accessToken,
+            offset: 0,
+        }).toString(),
+    });
+};
+```
 
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
