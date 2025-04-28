@@ -1,4 +1,4 @@
-import {END_DATE, START_DATE} from './config';
+import {END_DATE, START_DATE, TOKEN_STETHO_URL} from './config';
 
 // See: https://developer.withings.com/api-reference/#tag/stetho/operation/stethov2-list
 export const fetchStethoList = async (accessToken) => {
@@ -6,7 +6,7 @@ export const fetchStethoList = async (accessToken) => {
         const action = 'list';
         console.log('Start Date:', new Date(START_DATE * 1000).toISOString());
         console.log('End Date:', new Date(END_DATE * 1000).toISOString());
-        const response = await fetch('https://wbsapi.withings.net/v2/stetho', {
+        const response = await fetch(TOKEN_STETHO_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
