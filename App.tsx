@@ -17,7 +17,7 @@ import {requestTokenRefresh, revokeAccess, useWithingsAuth} from './src/services
 import {getNonce} from './src/services/rest/token_manager';
 import {checkAuthToken, clearAsyncStorage} from './src/services/storage/async_storage_helper';
 import {fetchSleepData, fetchSleepDataSummary} from './src/services/rest/sleep';
-import {fetchHeartRateData} from './src/services/rest/heart';
+import {fetchHeartList} from './src/services/rest/heart';
 import {fetchStethoList} from './src/services/rest/stetho';
 
 
@@ -25,11 +25,13 @@ function App(): React.JSX.Element {
     const { accessToken, refreshToken, userId, setAccessToken, setRefreshToken, setUserId } = useWithingsAuth();
 
     useEffect(() => {
+        // Check existing auth tokens, disable Web Auth Flow launch
+        checkAuthToken(setAccessToken, setRefreshToken, setUserId, false).then();
         if (accessToken && refreshToken) {
             console.log('Access Token:', accessToken);
             console.log('Refresh Token:', refreshToken);
         }
-    }, [accessToken, refreshToken]);
+    }, [accessToken, refreshToken, setAccessToken, setRefreshToken, setUserId]);
   return (
       <View style={styles.container}>
           <Text style={styles.title}>Withings OAuth Integration</Text>
@@ -39,8 +41,8 @@ function App(): React.JSX.Element {
           <View style={{ marginTop: 20 }}>
               <Button title="Authorize Withings" onPress={() => {
                   console.log('🟢 Authorize button clicked');
-                  // startOAuthFlow();
-                  checkAuthToken(setAccessToken, setRefreshToken, setUserId).then();
+                  // Check existing auth tokens, enable Web Auth Flow launch
+                  checkAuthToken(setAccessToken, setRefreshToken, setUserId, true).then();
               }}
               />
           </View>
@@ -87,7 +89,7 @@ function App(): React.JSX.Element {
                   onPress={() => {
                       if(accessToken != null) {
                           console.log('Fetching heart rate data...');
-                          fetchHeartRateData(accessToken).then();
+                          fetchHeartList(accessToken).then();
                       } else {
                           Alert.alert('Error', 'Empty Access Token');
                       }

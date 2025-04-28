@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION} from '../rest/config';
 import {requestTokenRefresh, startOAuthFlow} from '../rest';
+import {Alert} from 'react-native';
 
 // Define constants for token keys in AsyncStorage
 export const KEY_ACCESS_TOKEN = 'accessToken';
@@ -18,8 +19,19 @@ export const storeUserTokens = async (accessToken, refreshToken, userId) => {
         [KEY_REFRESH_TOKEN_EXPIRATION, (Date.now() + REFRESH_TOKEN_EXPIRATION).toString()]]);
 };
 
-// Function to check token expiration and refresh if necessary
-export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId) => {
+/**
+ * Checks authentication tokens stored in AsyncStorage.
+ * If tokens are present and valid, updates the app state.
+ * If tokens are expired or missing, logs a message but does not trigger re-authentication.
+ *
+ * @param {Function} setAccessToken - Function to update the access token in state.
+ * @param {Function} setRefreshToken - Function to update the refresh token in state.
+ * @param {Function} setUserId - Function to update the user ID in state.
+ * @param {Boolean} launchWebAuthFlow - Boolean defined to check if Web Auth Flow should be launched.
+ * @returns {Promise<void>} A promise that resolves when the token check is complete.
+ */
+
+export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId, launchWebAuthFlow) => {
     try {
         // Retrieve tokens and expiration times from AsyncStorage
         const accessToken = await AsyncStorage.getItem(KEY_ACCESS_TOKEN);
@@ -30,8 +42,7 @@ export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId)
 
         if (!accessToken || !refreshToken || !accessTokenExpiration || !refreshTokenExpiration) {
             console.log('⚠️ Tokens or expiration times not found in AsyncStorage');
-            // Alert.alert('Error','⚠️ Tokens or expiration times not found in AsyncStorage');
-            startOAuthFlow();  // Call the hook to initiate OAuth flow
+            if(launchWebAuthFlow){startOAuthFlow();}  // Call the hook to initiate OAuth flow
             return;
         }
 
@@ -46,16 +57,17 @@ export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId)
 
             // If refresh token is also expired, initiate OAuth flow
             if (currentTime > refreshTokenExpTime) {
-                console.log('❌ Both tokens are expired. Proceeding with OAuth flow...');
-                startOAuthFlow();  // Call the hook to initiate OAuth flow
+                console.log('❌ Both tokens are expired. Proceed with Web Auth Flow...');
+                if(launchWebAuthFlow) {startOAuthFlow();}  // Call the hook to initiate OAuth flow
             } else {
                 console.log('🔄 Access token expired, but refresh token is still valid. Refreshing access token...');
                 requestTokenRefresh(setAccessToken, setRefreshToken, setUserId, refreshToken).then();  // Refresh the access token
             }
         } else {
+            if(launchWebAuthFlow) {Alert.alert('Web Auth Flow', 'Tokens are still valid, failed to launch Web Auth Flow.');}
             console.log('✅ Access token is still valid');
-            console.log(`Current Time: ${new Date(currentTime).toISOString()} 
-            AccessToken Expiration: ${new Date(accessTokenExpTime).toISOString()}
+            console.log(`Current Time: ${new Date(currentTime).toISOString()}\n
+            AccessToken Expiration: ${new Date(accessTokenExpTime).toISOString()}\n
             RefreshToken Expiration: ${new Date(refreshTokenExpTime).toISOString()}`);
             setAccessToken(accessToken);
             setRefreshToken(refreshToken);
