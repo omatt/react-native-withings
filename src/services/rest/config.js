@@ -22,6 +22,7 @@ export const TOKEN_OAUTH2_URL = `${TOKEN_BASE_URL}/oauth2`;
 export const TOKEN_URL = `${TOKEN_OAUTH2_URL}?action=requesttoken`;
 export const TOKEN_SLEEP_URL = `${TOKEN_BASE_URL}/sleep`;
 export const TOKEN_HEART_URL = `${TOKEN_BASE_URL}/heart`;
+export const TOKEN_STETHO_URL = `${TOKEN_BASE_URL}/stetho`;
 
 // Token expiration
 // See: https://developer.withings.com/developer-guide/v3/integration-guide/dropship-cellular/get-access/access-and-refresh-tokens/
