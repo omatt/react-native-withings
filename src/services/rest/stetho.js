@@ -1,23 +1,20 @@
+import {END_DATE, START_DATE} from './config';
+
 // See: https://developer.withings.com/api-reference/#tag/stetho/operation/stethov2-list
 export const fetchStethoList = async (accessToken) => {
     try {
-        // const endDate = Date.now(); // now
-        // // const startDate = endDate - 24 * 60 * 60;       // 24 hours ago
-        // const startDate = endDate - (7 * 24 * 60 * 60 * 1000);
-        const endDate = Math.floor(Date.now() / 1000); // now
-        // const startDate = endDate - 24 * 60 * 60;       // 24 hours ago
-        const startDate = endDate - 7 * 24 * 60 * 60;   // last 7 days
-        console.log('Start Date:', startDate);
-        console.log('End Date:', endDate);
+        const action = 'list';
+        console.log('Start Date:', new Date(START_DATE * 1000).toISOString());
+        console.log('End Date:', new Date(END_DATE * 1000).toISOString());
         const response = await fetch('https://wbsapi.withings.net/v2/stetho', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                action: 'list',
-                startdate: startDate.toString(),
-                enddate: endDate.toString(),
+                action: action,
+                startdate: START_DATE.toString(),
+                enddate: END_DATE.toString(),
                 access_token: accessToken,
                 offset: 0,
             }).toString(),

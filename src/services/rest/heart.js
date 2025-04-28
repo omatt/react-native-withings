@@ -1,26 +1,54 @@
-// See: https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-list
-export const fetchHeartRateData = async (accessToken) => {
+import { CLIENT_ID } from '@env';
+import {generateSignature, getNonce} from './token_manager';
+import {START_DATE, END_DATE, TOKEN_HEART_URL} from './config';
+
+// See: https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-get
+export const fetchHeartData = async (signalId, accessToken) => {
     try {
-        // const endDate = Date.now(); // now
-        // // const startDate = endDate - 24 * 60 * 60;       // 24 hours ago
-        // const startDate = endDate - (7 * 24 * 60 * 60 * 1000);
-        const endDate = Math.floor(Date.now() / 1000); // now
-        // const startDate = endDate - 24 * 60 * 60;       // 24 hours ago
-        const startDate = endDate - 7 * 24 * 60 * 60;   // last 7 days
-        console.log('Start Date:', startDate);
-        console.log('End Date:', endDate);
-        const response = await fetch('https://wbsapi.withings.net/v2/heart', {
+        const action = 'get';
+        const nonce = await getNonce();
+        const signature = await generateSignature(action, CLIENT_ID, nonce);
+        const response = await fetch(TOKEN_HEART_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: action,
+                signalid: signalId,
+                client_id: CLIENT_ID,
+                signature: signature,
+                nonce: nonce,
+                signal_token: 'TODO', // TODO:  how to fetch signal_token is undocumented https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-get
+            }).toString(),
+        });
+
+        const data = await response.json();
+        console.log('Heart v2 Get Response:', data);
+    } catch (error) {
+        console.error('❌ Error fetching heart rate data:', error);
+        return null;
+    }
+};
+
+// See: https://developer.withings.com/api-reference/#tag/heart/operation/heartv2-list
+export const fetchHeartList = async (accessToken) => {
+    try {
+        const action = 'list';
+        console.log('Start Date:', new Date(START_DATE * 1000).toISOString());
+        console.log('End Date:', new Date(END_DATE * 1000).toISOString());
+        const response = await fetch(TOKEN_HEART_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 // 'Authorization': `Bearer ${accessToken}`,
             },
             body: new URLSearchParams({
-                action: 'list',
-                startdate: startDate.toString(),
-                enddate: endDate.toString(),
+                action: action,
+                startdate: START_DATE.toString(),
+                enddate: END_DATE.toString(),
                 access_token: accessToken,
-                offset: 0,
+                offset: 0, // TODO: Add pagination
             }).toString(),
         });
 

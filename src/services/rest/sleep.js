@@ -1,23 +1,20 @@
-import {TOKEN_SLEEP_URL} from './config';
-
-const endDate = Math.floor(Date.now() / 1000); // now
-const startDate = endDate - 7 * 24 * 60 * 60;   // last 7 days
-const last48hours = endDate - 2 * 24 * 60 * 60;   // last 2 days
+import {END_DATE, LAST_48_HOURS, START_DATE, TOKEN_SLEEP_URL} from './config';
 
 // See: https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-get
 export const fetchSleepData = async (accessToken) => {
     try {
-        console.log('Start Date:', startDate);
-        console.log('End Date:', endDate);
+        const action = 'get';
+        console.log('Start Date:', new Date(START_DATE * 1000).toISOString());
+        console.log('End Date:', new Date(END_DATE * 1000).toISOString());
         const response = await fetch(TOKEN_SLEEP_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                action: 'get',
-                startdate: startDate.toString(),
-                enddate: endDate.toString(),
+                action: action,
+                startdate: START_DATE.toString(),
+                enddate: END_DATE.toString(),
                 access_token: accessToken,
                 // See data_fields reference: https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-get
                 data_fields: 'hr,rr,withings_index',
@@ -41,7 +38,13 @@ export const fetchSleepData = async (accessToken) => {
                     console.log('🕒 Start:', start.toISOString());
                     console.log('🕓 End:', end.toISOString());
                     console.log('💤 State:', getSleepStateName(state));
-                    if (hr !== undefined) {console.log('❤️ HR:', hr);}
+                    if (hr !== undefined) {
+                        console.log('❤️ HR:', hr);
+                        Object.entries(hr).forEach(([timestamp, value]) => {
+                            const time = new Date(Number(timestamp) * 1000).toISOString();
+                            console.log(`   🕒 ${time} → ❤️ ${value} bpm`);
+                        });
+                    }
                     if (rr !== undefined) {console.log('🌬️ RR:', rr);}
                     if (wi !== undefined) {console.log('📈 Withings Index:', wi);}
                 });
@@ -58,20 +61,21 @@ export const fetchSleepData = async (accessToken) => {
 // See: https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-getsummary
 export const fetchSleepDataSummary = async (accessToken) => {
     try {
-        console.log('Start Date:', startDate);
-        console.log('End Date:', endDate);
+        const action = 'getsummary';
+        console.log('Start Date:', new Date(START_DATE * 1000).toISOString());
+        console.log('End Date:', new Date(END_DATE * 1000).toISOString());
         const response = await fetch(TOKEN_SLEEP_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                action: 'getsummary',
-                startdateymd: formatDate(startDate),
-                enddateymd: formatDate(endDate),
+                action: action,
+                startdateymd: formatDate(START_DATE),
+                enddateymd: formatDate(END_DATE),
                 // Store timestamp for last update of data to fetch entries after this date, ideally startDate + endDate
                 // Set as startDate for testing
-                lastupdate: last48hours,
+                lastupdate: LAST_48_HOURS,
                 access_token: accessToken,
             }).toString(),
         });
