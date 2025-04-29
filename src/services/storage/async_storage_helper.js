@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ACCESS_TOKEN_EXPIRATION, REFRESH_TOKEN_EXPIRATION} from '../rest/config';
 import {requestTokenRefresh, startOAuthFlow} from '../rest';
 import {Alert} from 'react-native';
+import {formatDateYYYYMMDDHHMMSS} from '../utils';
 
 // Define constants for token keys in AsyncStorage
 export const KEY_ACCESS_TOKEN = 'accessToken';
@@ -30,7 +31,6 @@ export const storeUserTokens = async (accessToken, refreshToken, userId) => {
  * @param {Boolean} launchWebAuthFlow - Boolean defined to check if Web Auth Flow should be launched.
  * @returns {Promise<void>} A promise that resolves when the token check is complete.
  */
-
 export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId, launchWebAuthFlow) => {
     try {
         // Retrieve tokens and expiration times from AsyncStorage
@@ -66,9 +66,9 @@ export const checkAuthToken = async (setAccessToken, setRefreshToken, setUserId,
         } else {
             if(launchWebAuthFlow) {Alert.alert('Web Auth Flow', 'Tokens are still valid, failed to launch Web Auth Flow.');}
             console.log('✅ Access token is still valid');
-            console.log(`Current Time: ${new Date(currentTime).toISOString()}\n
-            AccessToken Expiration: ${new Date(accessTokenExpTime).toISOString()}\n
-            RefreshToken Expiration: ${new Date(refreshTokenExpTime).toISOString()}`);
+            console.log(`Current Time: ${formatDateYYYYMMDDHHMMSS(currentTime)}\n
+            AccessToken Expiration: ${formatDateYYYYMMDDHHMMSS(accessTokenExpTime)}\n
+            RefreshToken Expiration: ${formatDateYYYYMMDDHHMMSS(refreshTokenExpTime)}`);
             setAccessToken(accessToken);
             setRefreshToken(refreshToken);
             setUserId(userId);
