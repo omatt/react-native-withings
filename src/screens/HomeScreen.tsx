@@ -11,7 +11,7 @@ import {fetchStethoList} from '../services/rest/stetho';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
-export function App(): React.JSX.Element {
+export function Home(): React.JSX.Element {
     const navigation = useNavigation<HomeScreenNavigationProp>();
 
     const { accessToken, refreshToken, userId, setAccessToken, setRefreshToken, setUserId } = useWithingsAuth();
@@ -23,7 +23,7 @@ export function App(): React.JSX.Element {
             console.log('Access Token:', accessToken);
             console.log('Refresh Token:', refreshToken);
         }
-    }, [accessToken, refreshToken, setAccessToken, setRefreshToken, setUserId]);
+    }, [accessToken, refreshToken]); // Let checkAuthToken() have an empty dependency array to only run once on mount. a
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Withings OAuth Integration</Text>
