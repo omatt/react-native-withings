@@ -1,6 +1,25 @@
-# Withings API Setup
+# Withings API integration on React Native
 
-## Configuring Private Keys
+A demo app using React Native implementing [Withings API](https://developer.withings.com/api-reference/).
+
+- [Withings API Setup](#withings-api-setup)
+    - [Configuring Private Keys](#configuring-private-keys)
+    - [Callback URL](#callback-url)
+- [Implemented Withings API](#implemented-withings-api)
+    - [OAuth2](#oauth2)
+    - [Web Auth Flow](#fetch-authcode-through-web-auth-flow)
+    - [Request Token with AuthCode](#request-token---with-authcode)
+    - [Request Token with RefreshToken](#token-refresh---request-token-with-refreshtoken) 
+    - [Revoke User Access](#revoke-user-access)
+    - [Get Demo User](#get-demo-account-access)
+    - [Heart v2 Get](#heart-v2-get)
+    - [Heart v2 List](#heart-v2-list)
+    - [Sleep v2 Get](#sleep-v2-get-summary)
+    - [Sleep v2 Get Summary](#sleep-v2-get-summary)
+
+## Withings API Setup
+
+### Configuring Private Keys
 To use the Withings API, `CLIENT_ID` and `CLIENT_SECRET` key needs to be obtained from the [Withings Developer Dashboard](https://developer.withings.com/dashboard/). Create an application on the Withings Developer Dashboard to fetch a key. Here's how the Developer Dashboard looks like.
 
 <img width="1454" alt="Bildschirmfoto 2025-04-24 um 19 52 36" src="https://github.com/user-attachments/assets/61f48208-3bcd-4f76-841e-4a2f15a30471" />
@@ -13,7 +32,7 @@ CLIENT_ID=YOUR_CLIENT_ID
 CLIENT_SECRET=YOUR_SECRET_KEY
 ```
 
-## Callback URL
+### Callback URL
 Set up a Callback URL. Ensure that it matches the callback URL configured in the app to handle the redirect after Withings authentication.
 
 AndroidManifest.xml
@@ -44,7 +63,7 @@ Info.plist
 </array>
 ```
 
-## Implemented Withings API
+### Implemented Withings API
 
 Withings API documentation can be found [here](https://developer.withings.com/api-reference/).
 
