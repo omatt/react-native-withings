@@ -26,5 +26,20 @@ export const formatDateYYYYMMDD = (unixTimestamp) => {
     return date.toISOString().split('T')[0]; // Get 'yyyy-mm-dd'
 };
 
+export const formatDateYYYYMMDDHHMMSS = (unixTimestamp) => {
+    const date = new Date(unixTimestamp); // Convert from seconds to milliseconds
+
+    const pad = (num) => String(num).padStart(2, '0');
+
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1); // Months are 0-indexed
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 // Extract the device's timezone using `Intl.DateTimeFormat`
 export const timezone = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).format(new Date()).split(' ').pop();
