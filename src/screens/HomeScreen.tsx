@@ -23,7 +23,7 @@ export function Home(): React.JSX.Element {
             console.log('Access Token:', accessToken);
             console.log('Refresh Token:', refreshToken);
         }
-    }, [accessToken, refreshToken]); // Let checkAuthToken() have an empty dependency array to only run once on mount. a
+    }, [accessToken, refreshToken, setAccessToken, setRefreshToken, setUserId]); // Let checkAuthToken() have an empty dependency array to only run once on mount.
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Withings OAuth Integration</Text>
