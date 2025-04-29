@@ -1,5 +1,5 @@
 import {END_DATE, START_DATE, TOKEN_SLEEP_URL} from './config';
-import {convertSecondsToHMSS, formatDateYYYYMMDD} from '../utils';
+import {convertSecondsToHMSS, formatDateYYYYMMDD, formatDateYYYYMMDDHHMMSS} from '../utils';
 
 // See: https://developer.withings.com/api-reference/#tag/sleep/operation/sleepv2-get
 export const fetchSleepData = async (accessToken) => {
@@ -38,13 +38,13 @@ export const fetchSleepData = async (accessToken) => {
                 const wi = entry.withings_index;
 
                 console.log(`\n--- 📊 Sleep Point ${index + 1} ---`);
-                console.log('🕒 Start:', start.toISOString());
-                console.log('🕓 End:', end.toISOString());
+                console.log('🕒 Start:', formatDateYYYYMMDDHHMMSS(start));
+                console.log('🕓 End:', formatDateYYYYMMDDHHMMSS(end));
                 console.log('💤 State:', getSleepStateName(state));
                 if (hr !== undefined) {
                     console.log('❤️ HR:', hr);
                     Object.entries(hr).forEach(([timestamp, value]) => {
-                        const time = new Date(Number(timestamp) * 1000).toISOString();
+                        const time = formatDateYYYYMMDDHHMMSS((timestamp * 1000));
                         console.log(`   🕒 ${time} → ❤️ ${value} bpm`);
                     });
                 }
@@ -108,8 +108,8 @@ export const fetchSleepDataSummary = async (accessToken) => {
                 console.log('  - Average Heart Rate:', entry.hr_average);
                 console.log('  - Min Heart Rate:', entry.data.hr_min);
                 console.log('  - Max Heart Rate:', entry.data.hr_max);
-                console.log('  - Sleep Start:', new Date(entry.startdate * 1000).toISOString());
-                console.log('  - Sleep End:', new Date(entry.enddate * 1000).toISOString());
+                console.log('  - Sleep Start:', formatDateYYYYMMDDHHMMSS(entry.startdate * 1000));
+                console.log('  - Sleep End:', formatDateYYYYMMDDHHMMSS(entry.enddate * 1000));
             });
 
             return data;
