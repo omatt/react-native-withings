@@ -1,8 +1,8 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import SleepDataScreen from './src/screens/SleepDataScreen.tsx';
 import {RootStackParamList} from './src/navigation/Navigation.ts';
-import {App} from './src/screens/HomeScreen.tsx';
+import {Home} from './src/screens/HomeScreen.tsx';
+import SleepDataScreen from './src/screens/SleepDataScreen.tsx';
 import SleepDataSummaryScreen from './src/screens/SleepDataSummaryScreen.tsx';
 
 // export default App;
@@ -14,7 +14,7 @@ export default function Main() {
         <NavigationContainer>
             <Stack.Navigator>
                 <Stack.Screen name="Home"
-                              component={App}
+                              component={Home}
                               options={{ headerShown: false }}  // Hide the header for this screen
                 />
                 <Stack.Screen name="Sleep Data" component={SleepDataScreen} />
